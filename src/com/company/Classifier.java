@@ -12,19 +12,61 @@ import java.util.Arrays;
  */
 public class Classifier {
 
-    int[][][] frequencies;
-    double[][][] probablitiies;
+    double[] classProbabilities;
+    double[][][] probablities;
+
 
     private Classifier(String filename) throws IOException {
         ArrayList<Instance> instances = null;
         File file = new File(filename);
-        if(file.exists()){
-            instances = createInstances(file);
-        }
-        else throw new IllegalArgumentException("File doesn't exist");
+        instances = createInstances(file,true);
 
-        frequencies = createFrequencyTable(instances);
-        probablitiies = createProbablityTable(frequencies);
+        int[][][] frequencies = createFrequencyTable(instances);
+        probablities = createProbablityTable(frequencies);
+
+        //set overall class probabilities
+        int totalTrue = 0;
+        for (Instance i : instances) {
+            totalTrue += i.getClassLabel() ? 1 : 0;
+        }
+        classProbabilities = new double[2];
+
+        classProbabilities[0] = (double) totalTrue / instances.size();
+        classProbabilities[1] = 1.0 - classProbabilities[0];
+    }
+
+    public void classifyUnknown(String filename) {
+        ArrayList<Instance> instances = null;
+        File file = new File(filename);
+        try{
+            instances = createInstances(file,false);
+        } catch (IOException e){
+            System.out.println("An error occured while reading file");
+            return;
+        }
+
+        for (Instance i : instances) {
+            System.out.println("\n" + i.toString());
+            classifyInstance(i);
+        }
+    }
+
+    private void classifyInstance(Instance unknown){
+        double probabilityFalse = classProbabilities[0];
+        double probabilityTrue = classProbabilities[1];
+
+
+        //calculate probablity of false or true
+        for (int i = 0; i < probablities[0].length; i++) {
+            boolean instanceAttr = unknown.getValues()[i];
+            probabilityFalse *= probablities[0][i][toInt(instanceAttr)];
+            probabilityTrue *= probablities[1][i][toInt(instanceAttr)];
+        }
+
+        System.out.println("probability\nfalse: \t" + probabilityFalse + " true:\t"+probabilityTrue);
+        boolean finalVal =  probabilityFalse < probabilityTrue;
+        System.out.println(finalVal? "TRUE" : "FALSE");
+        unknown.setClassLabel(finalVal);
     }
 
     private int[][][] createFrequencyTable(ArrayList<Instance> instances){
@@ -37,17 +79,7 @@ public class Classifier {
                 frequencies[toInt(i.getClassLabel())][j][toInt(vals[j])] += 1;
             }
         }
-
-//        for (int i = 0; i < frequencies.length; i++) {
-//            for (int j = 0; j < frequencies[i].length; j++) {
-//                for (int k = 0; k < frequencies[i][j].length; k++) {
-//                    frequencies[i][j][k] += 1;
-//                    //System.out.print(frequencies[i][j][k]);
-//                }
-//            }
-//            System.out.println("\n");
-//        }
-
+        System.out.println("num instances: " + instances.size());
         return frequencies;
     }
 
@@ -58,13 +90,15 @@ public class Classifier {
             //attribute
             for (int j = 0; j < frequencies[i].length; j++) {
                 //attribute true / false
-                for (int k = 0; k < frequencies[i][j].length; k++) {
-                    frequencies[i][j][k] += 1;
-                }
-            }
-            System.out.println("\n");
-        }
+                int numAttrFalse = frequencies[i][j][0];
+                int numAttrTrue = frequencies[i][j][1];
+                double total = numAttrFalse + numAttrTrue;
 
+                probabilities[i][j][0] = numAttrFalse / total;
+                probabilities[i][j][1] = numAttrTrue / total;
+                System.out.println("Attribte:\ttrue: " + probabilities[i][j][0] + "\t numFalse: " + probabilities[i][j][1]);
+            }
+        }
         return probabilities;
     }
 
@@ -72,13 +106,13 @@ public class Classifier {
         return b? 1 : 0;
     }
 
-    private ArrayList<Instance> createInstances(File fin) throws IOException {
+    private ArrayList<Instance> createInstances(File fin,boolean isClassified) throws IOException {
         BufferedReader br = new BufferedReader(new FileReader(fin));
 
         ArrayList<Instance> instances = new ArrayList();
         String line = null;
         while ((line = br.readLine()) != null) {
-            instances.add(new Instance(line));
+            instances.add(new Instance(line,isClassified));
             System.out.println(instances.get(instances.size()-1).toString());
         }
         br.close();
@@ -95,11 +129,11 @@ public class Classifier {
         return c;
     }
 
-    private class Instance{
+    private class Instance {
         private boolean [] values;
-        private boolean classLabel;
+        private Boolean classLabel;
 
-        public Instance(String row){
+        public Instance(String row,boolean isClassified){
             if(row == null)
                 throw new IllegalArgumentException("Row shouldn't be null");
 
@@ -109,13 +143,13 @@ public class Classifier {
             if(lineVals.length < 2)
                 throw new IllegalArgumentException();
 
-            boolean [] values = new boolean[lineVals.length-1];
+            boolean [] values = new boolean[(isClassified)?lineVals.length-1 : lineVals.length];
 
             for (int i = 0; i < values.length; i++) {
                 values[i] = toBool(lineVals[i]);
             }
 
-            this.classLabel = toBool(lineVals[lineVals.length-1]);
+            this.classLabel = (isClassified)?toBool(lineVals[lineVals.length-1]) : null;
             this.values = values;
         }
 
