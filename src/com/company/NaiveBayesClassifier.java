@@ -134,13 +134,13 @@ public class NaiveBayesClassifier {
         private Boolean classLabel;
 
         public Instance(String row,boolean isClassified){
-            if(row == null)
+            if(row == null || row.length() == 0)
                 throw new IllegalArgumentException("Row shouldn't be null");
 
             String [] lineVals = row.trim().split("\\s+");
 
             //Should at least have an attribute and a label
-            if(lineVals.length < 2)
+            if(lineVals.length < 2 && isClassified)
                 throw new IllegalArgumentException();
 
             boolean [] values = new boolean[(isClassified)?lineVals.length-1 : lineVals.length];
