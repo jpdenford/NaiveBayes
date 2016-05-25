@@ -8,16 +8,16 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 /**
- * Created by denforjohn on 16/05/16.
+ * Created by JP Denford on 16/05/16.
  */
 public class Classifier {
 
-    double[] classProbabilities;
-    double[][][] probablities;
+    private double[] classProbabilities;
+    private double[][][] probablities;
 
 
     private Classifier(String filename) throws IOException {
-        ArrayList<Instance> instances = null;
+        ArrayList<Instance> instances;
         File file = new File(filename);
         instances = createInstances(file,true);
 
@@ -25,18 +25,18 @@ public class Classifier {
         probablities = createProbablityTable(frequencies);
 
         //set overall class probabilities
-        int totalTrue = 0;
+        int totalFalse = 0;
         for (Instance i : instances) {
-            totalTrue += i.getClassLabel() ? 1 : 0;
+            totalFalse += !i.getClassLabel()? 1 : 0;
         }
         classProbabilities = new double[2];
 
-        classProbabilities[0] = (double) totalTrue / instances.size();
+        classProbabilities[0] = (double) totalFalse / instances.size();
         classProbabilities[1] = 1.0 - classProbabilities[0];
     }
 
     public void classifyUnknown(String filename) {
-        ArrayList<Instance> instances = null;
+        ArrayList<Instance> instances;
         File file = new File(filename);
         try{
             instances = createInstances(file,false);
@@ -110,7 +110,7 @@ public class Classifier {
         BufferedReader br = new BufferedReader(new FileReader(fin));
 
         ArrayList<Instance> instances = new ArrayList();
-        String line = null;
+        String line;
         while ((line = br.readLine()) != null) {
             instances.add(new Instance(line,isClassified));
             System.out.println(instances.get(instances.size()-1).toString());
@@ -162,10 +162,6 @@ public class Classifier {
 
         public boolean[] getValues() {
             return values;
-        }
-
-        public void setValues(boolean[] values) {
-            this.values = values;
         }
 
         public Boolean getClassLabel() {
