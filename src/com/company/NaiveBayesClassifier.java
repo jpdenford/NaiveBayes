@@ -15,7 +15,7 @@ public class NaiveBayesClassifier {
     private double[] classProbabilities;
     private double[][][] probablities;
 
-
+    /*Naive Bayes classifier for boolean data*/
     private NaiveBayesClassifier(String filename) throws IOException {
         ArrayList<Instance> instances;
         File file = new File(filename);
@@ -35,6 +35,7 @@ public class NaiveBayesClassifier {
         classProbabilities[1] = 1.0 - classProbabilities[0];
     }
 
+    /*Classify Unknown Instances From a file*/
     public void classifyUnknown(String filename) {
         ArrayList<Instance> instances;
         File file = new File(filename);
@@ -44,14 +45,15 @@ public class NaiveBayesClassifier {
             System.out.println("An error occured while reading file");
             return;
         }
-
+        System.out.println("Number of instances: " + instances.size());
+        
         for (Instance i : instances) {
-            System.out.println("\n" + i.toString());
             classifyInstance(i);
         }
     }
 
-    private void classifyInstance(Instance unknown){
+    /*Classify an unknown instance based on the existing classifier*/
+    public void classifyInstance(Instance unknown){
         double probabilityFalse = classProbabilities[0];
         double probabilityTrue = classProbabilities[1];
 
@@ -62,13 +64,15 @@ public class NaiveBayesClassifier {
             probabilityFalse *= probablities[0][i][toInt(instanceAttr)];
             probabilityTrue *= probablities[1][i][toInt(instanceAttr)];
         }
-
-        System.out.println("probability\nfalse: \t" + probabilityFalse + " true:\t"+probabilityTrue);
+        System.out.println("\n"+unknown.toString());
+        System.out.println("P(!S|D): " + probabilityFalse + "\tP(S|D): "+probabilityTrue);
         boolean finalVal =  probabilityFalse < probabilityTrue;
-        System.out.println(finalVal? "TRUE" : "FALSE");
+        System.out.println("Predicted class: " + (finalVal? "TRUE" : "FALSE"));
         unknown.setClassLabel(finalVal);
     }
 
+    /*Given a list of instances, construct the frequency table
+    needed for the probability table*/
     private int[][][] createFrequencyTable(ArrayList<Instance> instances){
         int attributeCount = instances.get(0).getValues().length;
         int[][][] frequencies = new int[2][attributeCount][2];
@@ -79,10 +83,11 @@ public class NaiveBayesClassifier {
                 frequencies[toInt(i.getClassLabel())][j][toInt(vals[j])] += 1;
             }
         }
-        System.out.println("num instances: " + instances.size());
+        System.out.println("Number of instances: " + instances.size());
         return frequencies;
     }
 
+    /*Construct the probability table which will be used to classify unknown instances*/
     private double[][][] createProbablityTable(int[][][] frequencies){
         double[][][] probabilities = new double[frequencies.length][frequencies[0].length][frequencies[0][0].length];
         //outcome true / false
@@ -96,7 +101,6 @@ public class NaiveBayesClassifier {
 
                 probabilities[i][j][0] = numAttrFalse / total;
                 probabilities[i][j][1] = numAttrTrue / total;
-                System.out.println("Attribte:\ttrue: " + probabilities[i][j][0] + "\t numFalse: " + probabilities[i][j][1]);
             }
         }
         return probabilities;
@@ -106,8 +110,18 @@ public class NaiveBayesClassifier {
         return b? 1 : 0;
     }
 
-    private ArrayList<Instance> createInstances(File fin,boolean isClassified) throws IOException {
+    /*Given a file of instances, construct classifiers
+    * File lines should be in the following form
+    * where the values represent boolean features and the
+    * righmost value is the classification if known (pass in flag accordingly)
+    *   1   0   0   1   1
+    *   0   1   1   1   0
+    * */
+    private ArrayList<Instance> createInstances(File fin, boolean isClassified) throws IOException {
         BufferedReader br = new BufferedReader(new FileReader(fin));
+
+        String classified = (isClassified)?" classified":" unclassified";
+        System.out.println("\nReading" + classified + " Instances.");
 
         ArrayList<Instance> instances = new ArrayList<>();
         String line;
@@ -119,6 +133,7 @@ public class NaiveBayesClassifier {
         return instances;
     }
 
+    /*Returns a classifier if the file can be read correctly else null*/
     public static NaiveBayesClassifier classifierFromFile(String filename){
         NaiveBayesClassifier c = null;
         try{
@@ -129,7 +144,8 @@ public class NaiveBayesClassifier {
         return c;
     }
 
-    private class Instance {
+    /*Represents a line in the file*/
+    public class Instance {
         private boolean [] values;
         private Boolean classLabel;
 
@@ -153,7 +169,7 @@ public class NaiveBayesClassifier {
             this.values = values;
         }
 
-        //"0" (trimmed) to true else false
+        //"0" (trimmed) to false else true
         private boolean toBool(String val){
             if(val == null) return false;
             return !val.trim().equals("0");
@@ -174,9 +190,10 @@ public class NaiveBayesClassifier {
 
         @Override
         public String toString() {
+            String label = ((classLabel == null)? "unclassified" : classLabel.toString());
             return "Instance{" +
-                    "values=" + Arrays.toString(values) +
-                    ", classLabel=" + classLabel +
+                    "values= " + Arrays.toString(values) +
+                    ", classLabel= " + label +
                     '}';
         }
     }
