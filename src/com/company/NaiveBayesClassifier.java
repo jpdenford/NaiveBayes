@@ -10,13 +10,13 @@ import java.util.Arrays;
 /**
  * Created by JP Denford on 16/05/16.
  */
-public class Classifier {
+public class NaiveBayesClassifier {
 
     private double[] classProbabilities;
     private double[][][] probablities;
 
 
-    private Classifier(String filename) throws IOException {
+    private NaiveBayesClassifier(String filename) throws IOException {
         ArrayList<Instance> instances;
         File file = new File(filename);
         instances = createInstances(file,true);
@@ -109,7 +109,7 @@ public class Classifier {
     private ArrayList<Instance> createInstances(File fin,boolean isClassified) throws IOException {
         BufferedReader br = new BufferedReader(new FileReader(fin));
 
-        ArrayList<Instance> instances = new ArrayList();
+        ArrayList<Instance> instances = new ArrayList<>();
         String line;
         while ((line = br.readLine()) != null) {
             instances.add(new Instance(line,isClassified));
@@ -119,10 +119,10 @@ public class Classifier {
         return instances;
     }
 
-    public static Classifier classifierFromFile(String filename){
-        Classifier c = null;
+    public static NaiveBayesClassifier classifierFromFile(String filename){
+        NaiveBayesClassifier c = null;
         try{
-            c = new Classifier(filename);
+            c = new NaiveBayesClassifier(filename);
         }catch (IOException e) {
             System.err.println("Couldnt read file: " + filename);
         }
