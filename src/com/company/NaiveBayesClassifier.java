@@ -137,6 +137,15 @@ public class NaiveBayesClassifier {
         return instances;
     }
 
+    public void printProbabilityTable(){
+        for (int i = 0; i < probablities[0].length; i++) {
+            String falses = "F" + i + " = false\t" + probablities[0][i][0] + "\t" + probablities[0][i][1];
+            String trues = "F" + i + " = true\t" + probablities[1][i][0] + "\t" + probablities[1][i][1];
+            System.out.println(falses);
+            System.out.println(trues);
+        }
+    }
+
     /*Returns a classifier if the file can be read correctly else null*/
     public static NaiveBayesClassifier classifierFromFile(String filename){
         NaiveBayesClassifier c = null;
