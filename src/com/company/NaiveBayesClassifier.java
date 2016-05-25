@@ -76,7 +76,11 @@ public class NaiveBayesClassifier {
     private int[][][] createFrequencyTable(ArrayList<Instance> instances){
         int attributeCount = instances.get(0).getValues().length;
         int[][][] frequencies = new int[2][attributeCount][2];
-
+        //initialise to 1
+        for (int i = 0; i < attributeCount; i++) {
+            Arrays.fill(frequencies[0][i],1);
+            Arrays.fill(frequencies[1][i],1);
+        }
         for (Instance i : instances) {
             boolean[] vals = i.getValues();
             for (int j = 0; j < vals.length; j++) {
